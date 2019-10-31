@@ -6,7 +6,7 @@ from airflow import DAG
 from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import PythonOperator
 
-from google.cloud import storage
+from lib.google_storage import upload_gcs_file
 
 GITHUB_USERNAME = os.getenv('GITHUB_USERNAME')
 GOOGLE_PROJECT_ID = os.getenv('GOOGLE_PROJECT_ID')
@@ -63,10 +63,13 @@ transform_commits = PythonOperator(
 def load(**kwargs):
     commits = kwargs['ti'].xcom_pull(task_ids=transform_commits.task_id)
 
-    client = storage.Client(project=GOOGLE_PROJECT_ID)
-    bucket = client.get_bucket(GOOGLE_STORAGE_BUCKET)
-    blob = bucket.blob(OUTPUT_FILENAME)
-    blob.upload_from_string(data=json.dumps(commits), content_type='application/json')
+    upload_gcs_file(
+        data=json.dumps(commits),
+        content_type='application/json',
+        filename=OUTPUT_FILENAME,
+        project_id=GOOGLE_PROJECT_ID,
+        bucket=GOOGLE_STORAGE_BUCKET,
+    )
 
 
 load_commits = PythonOperator(
