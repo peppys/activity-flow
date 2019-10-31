@@ -45,7 +45,7 @@ services:
     volumes:
       - ./airflow/dags:/usr/local/airflow/dags
       - ./airflow/logs:/usr/local/airflow/logs
-      - /Users/peppysisay/.config/gcloud/application_default_credentials.json:/config/google/application_default_credentials.json
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/config/google/application_default_credentials.json
     entrypoint: airflow scheduler
     healthcheck:
       test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-scheduler.pid ]"]
