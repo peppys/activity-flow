@@ -10,8 +10,8 @@ STRAVA_CLIENT_ID = os.getenv('STRAVA_CLIENT_ID')
 STRAVA_CLIENT_SECRET = os.getenv('STRAVA_CLIENT_SECRET')
 STRAVA_REFRESH_TOKEN = os.getenv('STRAVA_REFRESH_TOKEN')
 
-GOOGLE_PROJECT_ID = os.getenv('GOOGLE_PROJECT_ID')
 GOOGLE_STORAGE_BUCKET = os.getenv('GOOGLE_STORAGE_BUCKET')
+OUTPUT_FILENAME = 'strava.json'
 
 default_args = {
     'owner': 'airflow',
@@ -24,6 +24,7 @@ dag = DAG(
     default_args=default_args,
     schedule_interval=timedelta(days=1),
     max_active_runs=1,
+    catchup=False,
 )
 
 check_strava_activity = OAuthHttpSensor(
@@ -48,9 +49,8 @@ load_strava_activity = OAuthHttpToGcsOperator(
     oauth_body={'client_id': STRAVA_CLIENT_ID, 'client_secret': STRAVA_CLIENT_SECRET,
                 'grant_type': 'refresh_token', 'refresh_token': STRAVA_REFRESH_TOKEN},
     oauth_response=lambda response: response.json()['access_token'],
-    project_id=GOOGLE_PROJECT_ID,
     bucket=GOOGLE_STORAGE_BUCKET,
-    filename='strava.json',
+    filename=OUTPUT_FILENAME,
     dag=dag,
 )
 

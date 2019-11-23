@@ -7,8 +7,8 @@ from airflow.sensors.http_sensor import HttpSensor
 from operators.http_to_gcs_operator import HttpToGcsOperator
 
 GITHUB_USERNAME = os.getenv('GITHUB_USERNAME')
-GOOGLE_PROJECT_ID = os.getenv('GOOGLE_PROJECT_ID')
 GOOGLE_STORAGE_BUCKET = os.getenv('GOOGLE_STORAGE_BUCKET')
+OUTPUT_FILENAME = 'github-commits.json'
 
 default_args = {
     'owner': 'airflow',
@@ -21,6 +21,7 @@ dag = DAG(
     default_args=default_args,
     schedule_interval=timedelta(days=1),
     max_active_runs=1,
+    catchup=False,
 )
 
 check_commits = HttpSensor(
@@ -39,9 +40,8 @@ load_github_commits = HttpToGcsOperator(
     headers={'Accept': 'application/vnd.github.cloak-preview'},
     method='GET',
     endpoint=f'https://api.github.com/search/commits?q=committer:{GITHUB_USERNAME}&sort=committer-date',
-    project_id=GOOGLE_PROJECT_ID,
     bucket=GOOGLE_STORAGE_BUCKET,
-    filename='github-commits.json',
+    filename=OUTPUT_FILENAME,
     dag=dag,
 )
 
