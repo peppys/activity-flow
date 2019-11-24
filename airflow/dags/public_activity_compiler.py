@@ -12,7 +12,7 @@ from github_commits_loader import OUTPUT_FILENAME as GITHUB_OUTPUT_FILENAME
 from strava_activity_loader import OUTPUT_FILENAME as STRAVA_OUTPUT_FILENAME
 
 GOOGLE_STORAGE_BUCKET = os.getenv('GOOGLE_STORAGE_BUCKET')
-OUTPUT_FILENAME = 'public-activity.json'
+OUTPUT_FILENAME = 'index.html'
 
 
 def compileactivity():
