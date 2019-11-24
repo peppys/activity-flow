@@ -2,6 +2,7 @@ from datetime import timedelta, datetime
 import os
 
 from airflow import DAG
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
 
 from operators.oauth_http_to_gcs_operator import OAuthHttpToGcsOperator
 from sensors.oauth_http_sensor import OAuthHttpSensor
@@ -11,7 +12,7 @@ STRAVA_CLIENT_SECRET = os.getenv('STRAVA_CLIENT_SECRET')
 STRAVA_REFRESH_TOKEN = os.getenv('STRAVA_REFRESH_TOKEN')
 
 GOOGLE_STORAGE_BUCKET = os.getenv('GOOGLE_STORAGE_BUCKET')
-OUTPUT_FILENAME = 'strava.json'
+OUTPUT_FILENAME = 'strava-activity.json'
 
 default_args = {
     'owner': 'airflow',
@@ -20,7 +21,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='strava',
+    dag_id='strava_activity_loader',
     default_args=default_args,
     schedule_interval=timedelta(days=1),
     max_active_runs=1,
@@ -54,4 +55,10 @@ load_strava_activity = OAuthHttpToGcsOperator(
     dag=dag,
 )
 
-check_strava_activity >> load_strava_activity
+trigger_activity_compiler = TriggerDagRunOperator(
+    task_id='trigger_activity_compiler',
+    trigger_dag_id='public_activity_compiler',
+    dag=dag,
+)
+
+check_strava_activity >> load_strava_activity >> trigger_activity_compiler

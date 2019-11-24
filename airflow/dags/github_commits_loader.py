@@ -2,6 +2,7 @@ from datetime import timedelta, datetime
 import os
 
 from airflow import DAG
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
 from airflow.sensors.http_sensor import HttpSensor
 
 from operators.http_to_gcs_operator import HttpToGcsOperator
@@ -17,7 +18,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='github',
+    dag_id='github_commits_loader',
     default_args=default_args,
     schedule_interval=timedelta(days=1),
     max_active_runs=1,
@@ -45,4 +46,10 @@ load_github_commits = HttpToGcsOperator(
     dag=dag,
 )
 
-check_commits >> load_github_commits
+trigger_activity_compiler = TriggerDagRunOperator(
+    task_id='trigger_activity_compiler',
+    trigger_dag_id='public_activity_compiler',
+    dag=dag,
+)
+
+check_commits >> load_github_commits >> trigger_activity_compiler
